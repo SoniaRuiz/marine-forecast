@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="x-ua-compatible" content="ie=edge">
+        <title>Predicción marítima</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta http-equiv="X-Frame-Options" content="allow">
+
+        <link rel="manifest" href="site.webmanifest">
+        <link rel="apple-touch-icon" href="icon.png">
+        
+		<!-- CSS -->
+		<link rel="stylesheet" href="css/bootstrap.min.css">
+		<link rel="stylesheet" href="css/bootstrap-datepicker3.css"/>
+		<link rel="stylesheet" href="css/main.css">
+		
+		
+		<!-- JS -->
+		<script src="js/jquery-3.2.1.min.js"></script>
+		<script src="js/bootstrap.min.js"></script>
+        	<script src="js/main.js"></script>
+		<script type="text/javascript" src="js/bootstrap-datepicker.min.js"></script>
+  
+    </head>
+    <body>
+		
+	<div class="container col-xs-12">
+		
+		<!-- Información general sobre la climatología de la zona -->
+		<div itemprop='event' itemscope itemtype='http://schema.org/Event'>
+			<article class="weather-card" onclick="javascript:$('#myModal').modal('show');">
+				<p itemprop='location' class="weather-card-location"></p>
+				<p itemprop='about' class="weather-card-state"></p>
+
+				 
+				<ul class="weather-card-info">
+					<li itemprop='about' class="weather-card-info-item weather-card-precipitation"></li>
+					<li itemprop='about' class="weather-card-info-item weather-card-temp"></li>
+					<li itemprop='about' class="weather-card-info-item weather-card-humidity"></li>
+				</ul>
+			</article>
+		</div>
+
+		<!-- Código para el pop up con la lista de zonas marítimas de las cuales se puede saber su previsión -->
+		<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					
+				<!--<iframe width="300" height="200" src="https://www.youtube.com/embed/mht1UJqwYX0" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>-->
+					
+					<div class="modal-header">
+						<button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">×</span></button>
+						<h4 class="modal-title" id="myModalLabel">Seleccione zona</h4>
+					</div>
+					<div class="modal-body">
+						<label class="radio-inline">
+							<input type="radio" checked name="areaCode" id="areaCode1" value="37.95,-0.67" onclick="javascript:zone='Torrevieja';"> Torrevieja
+						</label><br/>
+						<label class="radio-inline">
+							<input type="radio" name="areaCode" id="areaCode2" value="37.58486,-0.984508" onclick="javascript:zone='Cartagena';"> Cartagena
+						</label><br/>
+						<label class="radio-inline">
+							<input type="radio" name="areaCode" id="areaCode3" value="37.737780,-0.734705" onclick="javascript:zone='La Manga';"> La Manga
+						</label>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-default" data-dismiss="modal">Cerrar</button>
+						<button id="selectarea" type="button" class="btn btn-primary" onclick="javascript:selectedArea();">Aceptar</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<br/>
+
+		<!-- Información hora por hora de la predicción marítima de la zona -->
+		<div class="form-group">
+		  <!--<label for="sel1">Selecciona día:</label>-->
+		  <select class="form-control" id="date" onchange="javascript:onChangeDateSelection();">
+		  </select>
+		</div>
+		
+		<table class="table table-striped table-fixed">
+			<thead>
+			  <tr>
+				<th class='col-4'>Hora</th>
+				<th class='col-4'>Olas (m)</th>
+				<th class='col-4'>Viento (km/h)</th>
+				<!--<th class='col-2'>Ráfagas (km/h)</th> 
+				<th class='col-2'>Dirección viento</th>-->
+			  </tr>
+			</thead>
+			<tbody id="hour-tbody"></tbody>
+		</table>
+		
+	</div>
+    </body>
+</html>
