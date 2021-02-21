@@ -362,11 +362,11 @@ function getMarineForecast(){
 				else
 					precipitation = "Sin datos";
 				if(current_hour.airTemperature.length > 0)
-					temperature = parseFloat(current_hour.airTemperature[1].value).toFixed(2);
+					temperature = parseInt(current_hour.airTemperature[1].value) + " ºC";
 				else
 					temperature = "Sin datos";
 				if(current_hour.humidity.length > 0)
-					humidity = parseFloat(current_hour.humidity[1].value).toFixed(2);
+					humidity = parseFloat(current_hour.humidity[1].value).toFixed(2) + "%";
 				else
 					humidity = "Sin datos";
 				
@@ -419,7 +419,7 @@ function getMarineForecast(){
 						//wind = parseFloat(wind).toFixed(2);
 
 						//var beaufortScale = windSpeedToSeaBeaufortScale(wind);
-						swell_height = "<p>" + swell_height + "</p>"
+						swell_height = "<p>" + swell_height + " m</p>"
 						//swell_height = "<p>" + beaufortScale + "</p>";
 					}
 					else{
@@ -440,7 +440,7 @@ function getMarineForecast(){
 
 						wind_speed = (value.windSpeed[1].value/1000) * 3600;
 						wind_speed = parseInt(wind_speed);
-						wind_direction = wind_speed + "<img src='" + img_path + "' class='img-responsive img-center' style='width:32px;'/>";
+						wind_direction = wind_speed + "km/h <img src='" + img_path + "' class='img-responsive' style='width:50%;'/>";
 						//wind_direction = wind_direction + "<p>" + wind_type + "</p>";
 					}
 					else
