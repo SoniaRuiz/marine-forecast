@@ -1,58 +1,63 @@
 /**
- * App para la predicción marítima.
+ * Andrid App - Marine Forecast.
  *
  */
- 
- 
+
  /**
- * Variables globales.
+ * Global Variables.
  *
  */
- 
-//Variable global que almacena el número de días de los que se disponen predicción meteorológica
+
+// Global variable to store the total number of days from which there are wheather foreacast data
 var num_days = 0;
+
 //Variables globales para almacenar las coordenadas geográficas de la zona seleccionada.
 var lat = 37.95;
 var lng = -0.67;
+
 //Variable global para almacenar el nombre de la zona seleccionada
 var zone = "Torrevieja";
 
 
-/** 
+/**
  * Método que se ejecuta cuando el usuario selecciona una zona marítima de entre las tres sujeridas.
  * @param no params
  * @return no return data
  */
 function selectedArea(){
-	
-	//Obtenemos las nuevas coordenadas
+
+	//We get the new geografic coordinates
 	var coords = $('input[name=areaCode]:checked').val();
 	var coordssplited = coords.split(",");
 	lat = coordssplited[0];
 	lng = coordssplited[1];
-	//Limpiamos la anterior tabla
+
+	//Empty the datatable
 	$("#hour-tbody").empty()
-	//Obtenemos la nueva predicción
+
+	//Get new forecast data
 	getMarineForecast();
-	
-	//Cerramos el popup
+
+	$("#date").val($("#date option:first").val());
+
+	//Close the popup
 	$('#myModal').modal('hide');
 }
 
-/** 
- * Método que inicializa y configura el selector de fechas.
- * @param número de días más desde la fecha actual
+/**
+ * Inits and configure the dropdown.
+ * @param num_days total number of days with forecast data from today
  * @return no return data
  */
  function formatDateSelection(num_days){
-	 //Establecer el valor de la fecha de hoy
+	// Adds the new date to the dropdown date selector
 	var fulldate = new Date();
 	fulldate.setDate(fulldate.getDate() + num_days);
 	fulldate = getFormatedDate(fulldate);
-	$('#date').append($('<option>', {value:fulldate, text:fulldate}));	
+	$('#date').append($('<option>', {value:fulldate, text:fulldate}));
 }
 
-/** 
+/**
  * Método que gestiona el evento onChange del selector de fechas.
  * @param no params
  * @return no return data
@@ -64,11 +69,11 @@ function onChangeDateSelection(){
 	//Mostramos solo aquellas 'tr' cuya clase coincide con el día de hoy
 	$('tr[class="'+ date +'"]').each(function() {
 		$(this).show();
-	}); 
+	});
 }
- 
 
- 
+
+
 /**
 * Método que formatea la fecha recibida por parámetro a dd/mm/aaaa
 * @param date fecha que se desea formatear a dd/mm/aaaa
@@ -80,34 +85,34 @@ function onChangeDateSelection(){
 	var monthIndex = ((date.getMonth() + 1) < 10) ? '0' + (date.getMonth() + 1) : (date.getMonth() + 1);
 	var year = date.getFullYear();
 	var fulldate = day + '/' + monthIndex + '/' + year;
-	
+
 	return(fulldate);
  }
- 
 
- 
+
+
 /**
 * Método que obtiene la hora en formato hh:mm de una fecha
 * @param date fecha de la que se desea extraer la hora
 * @return string con la hora en formato hh:mm
 */
  function getHourFromDate(date) {
-	
+
 	var hour = date.getHours();
 	var minutes = date.getMinutes();
-	
+
 	if(hour >= 0 && hour <= 9)
 		hour = "0" + hour;
 	if(minutes >= 0 && minutes <= 9)
 		minutes = "0" + minutes;
-	
+
 	var time = hour + ":" + minutes;
-	
+
 	return(time);
 }
 
 /**
-* Método para elegir una imagen según los grados (dirección) del viento 
+* Método para elegir una imagen según los grados (dirección) del viento
 * recibidos por parámetro.
 * @param degrees Grados de la dirección del viento
 * @return ruta de la imagen correspondiente a la dirección del viento
@@ -261,13 +266,13 @@ function convertDegreesToImg(degrees){
 */
 function saveLastTimeLocaly(now){
 	if (typeof(Storage) !== "undefined") {
-		
+
 		//Fecha y hora de la última vez
 		var date = getFormatedDate(now);
 		var time = getHourFromDate(now);
-		
+
 		var lasttime = "Ult. vez " + date + " a las " + time;
-		
+
 		// Almacenamos
 		localStorage.setItem("lasttime", lasttime);
 
@@ -284,10 +289,10 @@ function saveLastTimeLocaly(now){
 function retrieveLastTime()
 {
 	if (typeof(Storage) !== "undefined") {
-		
+
 		//Recuperamos
 		var lasttime = localStorage.getItem("lasttime");
-		
+
 		// Indicamos la última vez en el footer
 		if(lasttime != null)
 			$("#lastconnection").text(lasttime);
@@ -308,52 +313,52 @@ function retrieveLastTime()
 $(document).ready (function (e) {
 	getMarineForecast();
 });
-function getMarineForecast(){	
-	
+function getMarineForecast(){
+
     // Petición al AJAX al servicio web 'stormglass'
-    $.ajax ({    
+    $.ajax ({
         url: 'https://api.stormglass.io/forecast',
         dataType: 'json',
         type: 'GET',
 		headers: {
-		  'Authentication-Token': 'da01e164-51cf-11e8-87bf-0242ac120008-da01e2cc-51cf-11e8-87bf-0242ac120008' // Api Key obtenida desde stormglass.io
+		  'Authentication-Token': '' // Api Key obtenida desde stormglass.io
 		},
         data: {
            lat: lat, //latitud y longitud de la zona de Torrevieja
            lng: lng
-       }, 
+       },
 	   //Si la petición se ha ejecutado con éxito
        success: function (r) {
-		   
+
 			if(r.hours[0].time){
-				
+
 				//////////////////////////////////////////////////////////////////////
 				// Rellenamos la tarjeta principal con datos meteorológicos generales
 				//////////////////////////////////////////////////////////////////////
-				
+
 				//Declaramos algunas variables
 				var state = null, precipitation = null, temperature = null, humidity = null;
-				
+
 				//Indicamos información general de cabecera para la hora actual
 				var dt = new Date();
-				var time = dt.getHours();				
+				var time = dt.getHours();
 				var current_hour = r.hours[2+time];
-				
+
 				//Comprobamos el valor de algunos datos
 				if(current_hour.cloudCover.length > 0){
 					var img = null;
 					state = (current_hour.cloudCover[1].value >= 10) ? "Nublado": "Despejado";
-					
+
 					if(time >= 21 || (time >= 0 && time < 7))
 						img = (state == "Nublado") ? "img/cloudynight.png" : "img/sky.jpg";
 					else
 						img = (state == "Nublado") ? "img/cloudy.jpg" : "img/sunny.jpg";
-		
+
 					$('.weather-card').css("background-image", "url(" + img + ")"); 
 				}
 				else
 					state = "Sin datos";
-				
+
 				if(current_hour.precipitation.length > 0){
 					precipitation = (current_hour.precipitation[0].value == 'nan') ? 0 : current_hour.precipitation[0].value;
 					if(precipitation > 1)
