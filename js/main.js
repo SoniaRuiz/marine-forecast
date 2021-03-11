@@ -316,7 +316,7 @@ function getMarineForecast(){
         dataType: 'json',
         type: 'GET',
 		headers: {
-		  'Authentication-Token': 'da01e164-51cf-11e8-87bf-0242ac120008-da01e2cc-51cf-11e8-87bf-0242ac120008' // Api Key obtenida desde stormglass.io
+		  'Authentication-Token': '' // Api Key obtenida desde stormglass.io
 		},
         data: {
            lat: lat, //latitud y longitud de la zona de Torrevieja
