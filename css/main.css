@@ -131,10 +131,11 @@ main {
     overflow: hidden;
     display: inline-block;
     width: 100%;
-    /*margin: 2em;*/
-    height: 10rem;
-    /*padding: 3rem 1rem;
+    margin-top: .5em;
+  height: 13rem;
+  padding-top: 1rem;
     background-color: steelblue;*/
+    
     background-image: url(../img/sunny.jpg);
     background-repeat: no-repeat;
     background-size: cover;
@@ -298,6 +299,13 @@ main {
 
 .clearfix:after {
     clear: both;
+}
+
+.table-responsive thead th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa; /* light background to make header readable */
+  z-index: 2; /* keeps header above table rows */
 }
 
 /* ==========================================================================
@@ -492,7 +500,9 @@ main {
 }
 
 @media only screen and (max-width: 600px) {
-    .table-fixed thead {
+  
+  
+  .table-fixed thead {
 	  width: 100%;
 	}
 	.table-fixed tbody {

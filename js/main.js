@@ -36,7 +36,10 @@ function selectedArea(){
 	getMarineForecast();
 	
 	//Cerramos el popup
-	$('#myModal').modal('hide');
+	const modalEl = document.getElementById('myModal');
+    const modal = bootstrap.Modal.getInstance(modalEl) || new bootstrap.Modal(modalEl);
+    modal.hide();
+
 }
 
 /** 
@@ -305,194 +308,187 @@ function retrieveLastTime()
 * @param non params
 * @return non return
 */
-$(document).ready (function (e) {
-	getMarineForecast();
-});
+
 function getMarineForecast(){	
+
+
 	
-    // Petición al AJAX al servicio web 'stormglass'
-    $.ajax ({    
-        url: 'https://api.stormglass.io/forecast',
-        dataType: 'json',
-        type: 'GET',
-		headers: {
-		  'Authentication-Token': '' // Api Key obtenida desde stormglass.io
-		},
-        data: {
-           lat: lat, //latitud y longitud de la zona de Torrevieja
-           lng: lng
-       }, 
-	   //Si la petición se ha ejecutado con éxito
-       success: function (r) {
-		   
-			if(r.hours[0].time){
+    const params = 'airTemperature,cloudCover,gust,humidity,precipitation,swellHeight,windDirection,windSpeed';
+
+    fetch(`https://api.stormglass.io/v2/weather/point?lat=${lat}&lng=${lng}&params=${params}&source=noaa`, {
+      headers: {
+        'Authorization': ''
+      }
+    }).then((response) => response.json()).then((r) => {
+      
+      // console.log(r);
+      if (r.hours[0].time) {
+
+        //Declaramos algunas variables
+		var state = null, precipitation = null, temperature = null, humidity = null;
 				
-				//////////////////////////////////////////////////////////////////////
-				// Rellenamos la tarjeta principal con datos meteorológicos generales
-				//////////////////////////////////////////////////////////////////////
-				
-				//Declaramos algunas variables
-				var state = null, precipitation = null, temperature = null, humidity = null;
-				
-				//Indicamos información general de cabecera para la hora actual
-				var dt = new Date();
-				var time = dt.getHours();				
-				var current_hour = r.hours[2+time];
-				
-				//Comprobamos el valor de algunos datos
-				if(current_hour.cloudCover.length > 0){
-					var img = null;
-					state = (current_hour.cloudCover[1].value >= 10) ? "Nublado": "Despejado";
-					
-					if(time >= 21 || (time >= 0 && time < 7))
-						img = (state == "Nublado") ? "img/cloudynight.png" : "img/sky.jpg";
-					else
-						img = (state == "Nublado") ? "img/cloudy.jpg" : "img/sunny.jpg";
+		// Indicamos información general de cabecera para la hora actual
+		var dt = new Date();
+		var time = dt.getHours();	
 		
-					$('.weather-card').css("background-image", "url(" + img + ")"); 
-				}
-				else
-					state = "Sin datos";
+		// Madrid, Spain time is 2 hours ahead of UTC.
+		var current_hour = r.hours[1+time];
 				
-				if(current_hour.precipitation.length > 0){
-					precipitation = (current_hour.precipitation[0].value == 'nan') ? 0 : current_hour.precipitation[0].value;
-					if(precipitation > 1)
-						$('.weather-card').css("background-image", "url(img/rainny_m.png)");
-				}
-				else
-					precipitation = "Sin datos";
-				if(current_hour.airTemperature.length > 0)
-					temperature = parseInt(current_hour.airTemperature[1].value) + " ºC";
-				else
-					temperature = "Sin datos";
-				if(current_hour.humidity.length > 0)
-					humidity = parseFloat(current_hour.humidity[1].value).toFixed(2) + "%";
-				else
-					humidity = "Sin datos";
-				
-				//Actualizamos los datos de la tarjeta
-				$(".weather-card")
-					.find ('.weather-card-state').html (state).end ()
-					.find ('.weather-card-location').html (zone).end ()
-					.find ('.weather-card-precipitation').html (precipitation).end ()
-					.find ('.weather-card-temp').html (temperature).end ()
-					.find ('.weather-card-humidity').html (humidity).end ()
-				;
-				
-				////////////////////////////////////////////////////////////////
-				// Rellenamos la tabla con la predicción marítima hora por hora
-				////////////////////////////////////////////////////////////////
-				
-				var hide = false;
-				
-				//Por cada hora de la respuesta recibida desde el servicio web
-				$.each(r.hours, function(key,value) {
+        //console.log(current_hour);
+        console.log(time);
+        console.log(current_hour.precipitation.noaa);
+        console.log(current_hour.hasOwnProperty("precipitation"))
+        
+		if (current_hour.hasOwnProperty("cloudCover")) {
+		    var img = null;
+			state = (parseInt(current_hour.cloudCover.noaa) >= 50) ? "Nublado": "Despejado";
 					
-					//Declaramos variables
-					var tr = null, swell_height = null, gust = null, wind_speed = null, wind_direction = null;
-					
-					//Obtenemos datos sobre la fecha
-					//var day = (value.time).substring(8,10);
-					//var monthIndex = (value.time).substring(5,7);
-					//var year = (value.time).substring(0,4);
-					var date = getFormatedDate(new Date(value.time));//day + '/' + monthIndex + '/' + year;
-					//Obtenemos la hora
-					var hour = getHourFromDate(new Date(value.time));
-					
-					//Comprobamos la disponibilidad de algunos datos
-					
-					if(value.windSpeed.length > 0){
-						//Convertimos de m/s a km/h
-						wind_speed = (value.windSpeed[1].value/1000) * 3600;
-						wind_speed = parseInt(wind_speed);//.toFixed(2);
-						
-						//var beaufortScale = windSpeedToBeaufortScale(wind_speed);
-						wind_speed = "<p>" + wind_speed + "</p>";//<p>" + beaufortScale + "</p>";
-					}
-					else{
-						wind_speed = "No disponible";
-					}
-
-					if(value.swellHeight.length > 0){
-						swell_height = parseFloat(value.swellHeight[1].value).toFixed(2);
-						//var wind = (value.windSpeed[1].value/1000) * 3600;
-						//wind = parseFloat(wind).toFixed(2);
-
-						//var beaufortScale = windSpeedToSeaBeaufortScale(wind);
-						swell_height = "<p>" + swell_height + " m</p>"
-						//swell_height = "<p>" + beaufortScale + "</p>";
-					}
-					else{
-						swell_height = "No disponible";
-					}
-					if(value.gust.length > 0){
-						//Convertimos de m/s a km/h
-						gust = (value.gust[1].value/1000) * 3600;
-						//Dejamos solo dos decimales
-						gust = parseInt(gust);//.toFixed(2);
-					}
-					else{
-						gust = "No disponible";
-					}
-					if(value.windDirection.length > 0){
-						var img_path = convertDegreesToImg(value.windDirection[1].value);
-						var wind_type = convertDegreesToTextDirecction(value.windDirection[1].value);
-
-						wind_speed = (value.windSpeed[1].value/1000) * 3600;
-						wind_speed = parseInt(wind_speed);
-						wind_direction = wind_speed + "km/h <img src='" + img_path + "' class='img-responsive' style='width:50%;'/>";
-						//wind_direction = wind_direction + "<p>" + wind_type + "</p>";
-					}
-					else
-						wind_direction = "No disponible";
-							
-					var display = (hide == false) ? "" : "display:none;";
-					//Creamos una nueva fila de la tabla		
-					
-					tr = "<tr itemprop='event' itemscope itemtype='http://schema.org/Event' class='" + date + "' style='" + display + "' >";
-					tr = tr + "<td class='col-xs-4' itemprop='startDate'>" + hour + "</td>";
-					tr = tr + "<td class='col-xs-4' itemprop='about'>" + swell_height + "</td>";
-					tr = tr + "<td class='col-xs-4' itemprop='about'>" + wind_direction + "</td>";
-					//tr = tr + "<td class='col-xs-2' itemprop='about'>" + gust + "</td>";
-					//tr = tr + "<td class='col-xs-2' itemprop='about'>" + wind_direction + "</td></tr>";
-					tr = tr + "</tr>";
-					
-				
-					//Añadimos la fila a la tabla
-					$('#hour-tbody').append(tr)
-					
-					//Flag para saber si hemos llegado al final del día
-					if(hour == "23:00"){
-						hide = true;
-						
-						if(num_days < 5)
-							formatDateSelection(num_days);
-						num_days = num_days + 1;
-					}
-					
-
-				});
-				
-				////////////////////////////////////////////////////////////////
-				// Guardamos de forma local la fecha de la última petición 
-				// al servicio web. Mostramos la fecha.
-				////////////////////////////////////////////////////////////////
-				saveLastTimeLocaly(new Date());
-				
-				retrieveLastTime();
-				
-			}
-			////////////////////////////////////////////////////////////////
-			// Activamos el DatePicker 
-			////////////////////////////////////////////////////////////////
+			if(time >= 21 || (time >= 0 && time < 7))
+				img = (state == "Nublado") ? "img/cloudynight.png" : "img/sky.jpg";
+			else
+				img = (state == "Nublado") ? "img/cloudy.jpg" : "img/sunny.jpg";
+			$('.weather-card').css("background-image", "url(" + img + ")"); 
 			
-			
-		},
-		error: function (xhr, ajaxOptions, thrownError) {
-			//Obtenemos la hora de la última conexión con éxito
-			retrieveLastTime();
-			//Añadimos un mensaje de error:
-			$("#lastconnection").append( "<p>Ha ocurrido un error: " + xhr.status + "</p>" );
+		} else {
+		    state = "Sin datos";
 		}
-    });	
+		
+		if (current_hour.hasOwnProperty("precipitation")) {
+		    precipitation = parseInt(current_hour.precipitation.noaa);
+			if (precipitation > 10) {
+				$('.weather-card').css("background-image", "url(img/rainny_m.png)");
+			} 
+		} else {
+			    precipitation = "Sin datos";
+		}
+			
+		if (current_hour.hasOwnProperty("airTemperature")) {
+		    temperature = parseInt(current_hour.airTemperature.noaa) + " ºC";
+		} else {
+		    temperature = "Sin datos";
+		}
+			
+		if (current_hour.humidity) {
+		    humidity = parseFloat(current_hour.humidity.noaa) + " %";
+		} else {
+		    humidity = "Sin datos";
+		}
+				
+		//Actualizamos los datos de la tarjeta
+		$(".weather-card")
+			.find ('.weather-card-state').html (state).end ()
+			.find ('.weather-card-location').html (zone).end ()
+			.find ('.weather-card-precipitation').html (precipitation).end ()
+			.find ('.weather-card-temp').html (temperature).end ()
+			.find ('.weather-card-humidity').html (humidity).end ()
+		;
+				
+		////////////////////////////////////////////////////////////////
+		// Rellenamos la tabla con la predicción marítima hora por hora
+		////////////////////////////////////////////////////////////////
+		
+		var hide = false;
+			
+			//Por cada hora de la respuesta recibida desde el servicio web
+			$.each(r.hours, function(key,value) {
+				
+				
+				//Declaramos variables
+				var tr = null, swell_height = null, gust = null, wind_speed = null, wind_direction = null;
+				
+				//Obtenemos datos sobre la fecha
+				var date = getFormatedDate(new Date(value.time));
+				//Obtenemos la hora
+				var hour = getHourFromDate(new Date(value.time));
+				
+				var today = new Date();
+		        var today_time = getHourFromDate(today);
+		        var today_day = getFormatedDate(today);
+		        
+		        console.log(date)
+				console.log(today_day)
+				
+				if ((date == today_day && hour >= today_time) || (date != today_day)) {
+				if (value.hasOwnProperty("windSpeed")) {
+					//Convertimos de m/s a km/h
+					wind_speed = (value.windSpeed.noaa) * 3.6;
+					wind_speed = parseInt(wind_speed);
+					wind_speed = "<p>" + wind_speed + "</p>";
+				} else {
+					wind_speed = "No disponible";
+				}
+
+				if (value.hasOwnProperty("swellHeight")) {
+					swell_height = parseFloat(value.swellHeight.noaa).toFixed(2);
+					swell_height = "<p>" + swell_height + "m</p>"
+				} else {
+					swell_height = "No disponible";
+				}
+				
+				if (value.hasOwnProperty("gust")) {
+					//Convertimos de m/s a km/h
+					gust = (value.gust.noaa) * 3.6;
+					gust = parseInt(gust);
+				} else {
+					gust = "No disponible";
+				}
+				
+				if (value.hasOwnProperty("windDirection")) {
+    				var img_path = convertDegreesToImg(value.windDirection.noaa);
+    				var wind_dir = convertDegreesToTextDirecction(value.windDirection.noaa);
+					var wind_type = convertDegreesToTextDirecction(value.windDirection.noaa);
+					wind_speed = (value.windSpeed.noaa) * 3.6;
+					wind_speed = parseInt(wind_speed) + " km/h " + wind_dir;
+					wind_direction = "<img src='" + img_path + "' class='img-responsive img-thumbnail' style='width:75%;'/>";
+				} else {
+				    wind_direction = "No disponible";
+				}
+				
+				if (value.hasOwnProperty("precipitation")) {
+		            var precipitation = parseInt(value.precipitation.noaa); 
+		            if (precipitation > 0) {
+		                precipitation = precipitation + " l/m2"
+		            }
+		        } else {
+                    var precipitation = "Sin datos";
+		        }
+							
+				var display = (hide == false) ? "" : "display:none;";
+				//Creamos una nueva fila de la tabla
+				tr = "<tr itemprop='event' itemscope itemtype='http://schema.org/Event' class='" + date + "' style='" + display + "' >";
+				tr = tr + "<td class='col-xs-4' itemprop='startDate'>" + hour + "</td>";
+				tr = tr + "<td class='col-xs-4' itemprop='about'>" + precipitation + "</td>";
+				tr = tr + "<td class='col-xs-4' itemprop='about'>" + swell_height + "</td>";
+				tr = tr + "<td class='col-xs-4' itemprop='about'>" + wind_speed + "</td>";
+				tr = tr + "<td class='col-xs-4' itemprop='about'>" + wind_direction + "</td>";
+				tr = tr + "</tr>";
+					
+				
+				//Añadimos la fila a la tabla
+				$('#hour-tbody').append(tr)
+				
+				//Flag para saber si hemos llegado al final del día
+				if(hour == "23:00"){
+					hide = true;					
+					if (num_days < 5)
+						formatDateSelection(num_days);
+					num_days = num_days + 1;
+				}
+				}
+
+			});
+			
+			////////////////////////////////////////////////////////////////
+			// Guardamos de forma local la fecha de la última petición 
+			// al servicio web. Mostramos la fecha.
+			////////////////////////////////////////////////////////////////
+			saveLastTimeLocaly(new Date());
+			retrieveLastTime();
+      }
+    });
 }
+
+$(document).ready (function (e) {
+
+    getMarineForecast();
+});
